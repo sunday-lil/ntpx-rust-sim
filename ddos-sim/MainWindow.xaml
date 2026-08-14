@@ -1,0 +1,330 @@
+<Window x:Class="NTPXSim.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NTPX//RUST  ·  Distributed Stress Console v3.7.1  [SIM BUILD]" 
+        Height="820" Width="1480"
+        MinHeight="720" MinWidth="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="#05070A"
+        Foreground="#C9D6E3"
+        FontFamily="Consolas"
+        ResizeMode="CanResize"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        WindowStyle="SingleBorderWindow">
+    <Window.Resources>
+        <SolidColorBrush x:Key="BG"     Color="#05070A"/>
+        <SolidColorBrush x:Key="Panel"  Color="#0B0F16"/>
+        <SolidColorBrush x:Key="Panel2" Color="#0E141D"/>
+        <SolidColorBrush x:Key="Edge"   Color="#1B2330"/>
+        <SolidColorBrush x:Key="Dim"    Color="#5B6B7E"/>
+        <SolidColorBrush x:Key="Txt"    Color="#C9D6E3"/>
+        <SolidColorBrush x:Key="Green"  Color="#22FF88"/>
+        <SolidColorBrush x:Key="Cyan"   Color="#22D3EE"/>
+        <SolidColorBrush x:Key="Red"    Color="#FF2D55"/>
+        <SolidColorBrush x:Key="Amber"  Color="#FFB020"/>
+        <SolidColorBrush x:Key="Purple" Color="#A779FF"/>
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Panel}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Edge}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="Hdr" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Dim}"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
+        <Style x:Key="Val" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
+        <Style x:Key="Btn" TargetType="Button">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Edge}"/>
+            <Setter Property="Background" Value="#0E141D"/>
+            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style x:Key="Field" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Background" Value="#070A0F"/>
+            <Setter Property="Foreground" Value="{StaticResource Green}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Edge}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="CaretBrush" Value="{StaticResource Green}"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#05070A" Padding="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ===================== HEADER ===================== -->
+            <Border Grid.Row="0" Style="{StaticResource CardBorder}" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="■" Foreground="{StaticResource Red}" FontSize="22" Margin="0,0,8,0" RenderTransformOrigin="0.5,0.5">
+                            <TextBlock.RenderTransform><RotateTransform x:Name="LogoSpin" Angle="0"/></TextBlock.RenderTransform>
+                        </TextBlock>
+                        <TextBlock Text="NTPX//RUST" Foreground="{StaticResource Green}" FontSize="18" FontWeight="Black" VerticalAlignment="Center"/>
+                        <TextBlock Text="  ::  distributed stress console" Foreground="{StaticResource Dim}" FontSize="11" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="3" Padding="6,3" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="{StaticResource Green}" VerticalAlignment="Center"/>
+                                <TextBlock Text="  WIREGUARD :: AUTHED" Foreground="{StaticResource Green}" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="3" Padding="6,3" Margin="0,0,8,0">
+                            <TextBlock Foreground="{StaticResource Cyan}" FontSize="11">
+                                <Run Text="KALI :: "/><Run x:Name="KaliIp" Text="10.66.0.2"/>
+                            </TextBlock>
+                        </Border>
+                        <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" CornerRadius="3" Padding="6,3">
+                            <TextBlock Foreground="{StaticResource Amber}" FontSize="11">
+                                <Run Text="OP :: "/><Run Text="ghost_0x7f"/>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Foreground="{StaticResource Dim}" FontSize="11" Text="UPTIME " VerticalAlignment="Center"/>
+                        <TextBlock x:Name="Uptime" Foreground="{StaticResource Txt}" FontSize="11" Text="00:00:00" VerticalAlignment="Center"/>
+                        <TextBlock Text="   " Width="8"/>
+                        <TextBlock Foreground="{StaticResource Purple}" FontSize="10" Text="SIM" VerticalAlignment="Center" FontWeight="Black"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ==================== BODY ==================== -->
+            <Grid Grid.Row="1" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340"/>
+                    <ColumnDefinition Width="6"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="6"/>
+                    <ColumnDefinition Width="320"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ==================== LEFT : CONFIG + FLEET ==================== -->
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="TARGET CONFIG" Style="{StaticResource Hdr}"/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="78"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                <TextBlock Text="host"     Grid.Row="0" Grid.Column="0" Style="{StaticResource Hdr}" VerticalAlignment="Center"/>
+                                <TextBox  x:Name="TgtHost" Grid.Row="0" Grid.Column="1" Style="{StaticResource Field}" Text="index.com"/>
+                                <TextBlock Text="port"     Grid.Row="1" Grid.Column="0" Style="{StaticResource Hdr}" VerticalAlignment="Center"/>
+                                <TextBox  x:Name="TgtPort" Grid.Row="1" Grid.Column="1" Style="{StaticResource Field}" Text="443"/>
+                                <TextBlock Text="duration" Grid.Row="2" Grid.Column="0" Style="{StaticResource Hdr}" VerticalAlignment="Center"/>
+                                <TextBox  x:Name="Dur"     Grid.Row="2" Grid.Column="1" Style="{StaticResource Field}" Text="00:30:00"/>
+                                <TextBlock Text="thr/node" Grid.Row="3" Grid.Column="0" Style="{StaticResource Hdr}" VerticalAlignment="Center"/>
+                                <TextBox  x:Name="ThrNode" Grid.Row="3" Grid.Column="1" Style="{StaticResource Field}" Text="20"/>
+                            </Grid>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="FLEET" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="FleetCount" Text="1000 nodes" Style="{StaticResource Val}" Foreground="{StaticResource Green}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="GROUPS" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="GroupCount" Text="50 · 10/node" Style="{StaticResource Val}" Foreground="{StaticResource Cyan}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,0,0,0">
+                        <DockPanel LastChildFill="True">
+                            <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="FLEET MATRIX" Style="{StaticResource Hdr}"/>
+                                <TextBlock Grid.Column="1" x:Name="AliveNodes" Text="0/1000" Style="{StaticResource Hdr}" Foreground="{StaticResource Green}"/>
+                            </Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#070A0F">
+                                <UniformGrid x:Name="FleetGrid" Columns="5" Rows="10"/>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ==================== CENTER : CONSOLE + TELEMETRY ==================== -->
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="190"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource CardBorder}" Padding="0">
+                        <DockPanel LastChildFill="True">
+                            <Grid DockPanel.Dock="Top" Margin="10,8,10,6">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="LIVE DISPATCH CONSOLE" Style="{StaticResource Hdr}"/>
+                                <TextBlock Grid.Column="1" x:Name="PpsLabel" Text="0 pps" Style="{StaticResource Hdr}" Foreground="{StaticResource Cyan}" Margin="0,0,12,0"/>
+                                <TextBlock Grid.Column="2" x:Name="GbpsLabel" Text="0.0 Gbps" Style="{StaticResource Hdr}" Foreground="{StaticResource Green}"/>
+                            </Grid>
+                            <Border BorderBrush="{StaticResource Edge}" BorderThickness="0,1,0,0" Background="#070A0F" ClipToBounds="True">
+                                <ScrollViewer x:Name="LogScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="8">
+                                    <TextBlock x:Name="LogBlock" FontFamily="Consolas" FontSize="12" TextWrapping="NoWrap" LineStackingStrategy="BlockLineHeight" LineHeight="16"/>
+                                </ScrollViewer>
+                            </Border>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorder}">
+                        <DockPanel LastChildFill="True">
+                            <TextBlock DockPanel.Dock="Top" Text="EGRESS TELEMETRY  ·  Gbps over T" Style="{StaticResource Hdr}"/>
+                            <Border BorderBrush="{StaticResource Edge}" BorderThickness="1" Background="#070A0F" CornerRadius="3">
+                                <Canvas x:Name="GraphHost" ClipToBounds="True">
+                                    <Canvas.Background>
+                                        <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                                            <GradientStop Color="#06140E" Offset="0"/>
+                                            <GradientStop Color="#0A0F16" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Canvas.Background>
+                                    <Polyline x:Name="GridLine1" Stroke="#13202C" StrokeThickness="1"/>
+                                    <Polyline x:Name="GridLine2" Stroke="#13202C" StrokeThickness="1"/>
+                                    <Polyline x:Name="GridLine3" Stroke="#13202C" StrokeThickness="1"/>
+                                    <Polyline x:Name="TrafficFill" Stroke="#0A2A1C" StrokeThickness="1"/>
+                                    <Polyline x:Name="TrafficLine" Stroke="#22FF88" StrokeThickness="1.5"/>
+                                    <TextBlock x:Name="PeakLabel" Canvas.Left="8" Canvas.Top="4" Foreground="{StaticResource Dim}" FontSize="10" Text="peak 0.0 Gbps"/>
+                                </Canvas>
+                            </Border>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ==================== RIGHT : PATTERN + STATS ==================== -->
+                <Grid Grid.Column="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="PATTERN MIX" Style="{StaticResource Hdr}"/>
+                            <StackPanel Margin="0,4,0,0">
+                                <DockPanel Margin="0,0,0,3">
+                                    <Border DockPanel.Dock="Left" Width="6" Background="{StaticResource Green}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="A · NTP MONLIST AMP" FontSize="11" Foreground="{StaticResource Green}" FontFamily="Consolas"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,3">
+                                    <Border DockPanel.Dock="Left" Width="6" Background="{StaticResource Cyan}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="B · SYN+ACK REFLECT" FontSize="11" Foreground="{StaticResource Cyan}" FontFamily="Consolas"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,3">
+                                    <Border DockPanel.Dock="Left" Width="6" Background="{StaticResource Amber}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="C · H2 SETTINGS FLOOD" FontSize="11" Foreground="{StaticResource Amber}" FontFamily="Consolas"/>
+                                </DockPanel>
+                                <DockPanel>
+                                    <Border DockPanel.Dock="Left" Width="6" Background="{StaticResource Purple}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="D · H2 PING+DATA(0)" FontSize="11" Foreground="{StaticResource Purple}" FontFamily="Consolas"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorder}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="RUNTIME STATS" Style="{StaticResource Hdr}"/>
+
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="EGRESS" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="sEgress" Grid.Column="1" Text="0.0 Gbps" Style="{StaticResource Val}" Foreground="{StaticResource Green}"/>
+                                </Grid>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="REFLECTED" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="sReflected" Grid.Column="1" Text="0.0 Gbps" Style="{StaticResource Val}" Foreground="{StaticResource Cyan}"/>
+                                </Grid>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="PPS" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="sPps" Grid.Column="1" Text="0" Style="{StaticResource Val}" Foreground="{StaticResource Txt}"/>
+                                </Grid>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="AMP FACTOR" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="sAmp" Grid.Column="1" Text="0.0x" Style="{StaticResource Val}" Foreground="{StaticResource Amber}"/>
+                                </Grid>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="FRAG EVASION" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="sFrag" Grid.Column="1" Text="off" Style="{StaticResource Val}" Foreground="{StaticResource Purple}"/>
+                                </Grid>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="HOPS (TRACE)" Style="{StaticResource Hdr}"/>
+                                    <TextBlock x:Name="sHops" Grid.Column="1" Text="--" Style="{StaticResource Val}" Foreground="{StaticResource Red}"/>
+                                </Grid>
+
+                                <Border BorderBrush="{StaticResource Edge}" BorderThickness="0,1,0,0" Margin="0,10,0,8"/>
+                                <TextBlock Text="ROUTE (ANON CHAIN)" Style="{StaticResource Hdr}"/>
+                                <TextBlock x:Name="Route" Text="—" FontSize="11" Foreground="{StaticResource Dim}" FontFamily="Consolas" TextWrapping="Wrap"/>
+
+                                <Border BorderBrush="{StaticResource Edge}" BorderThickness="0,1,0,0" Margin="0,10,0,8"/>
+                                <TextBlock Text="BINARY HASH" Style="{StaticResource Hdr}"/>
+                                <TextBlock x:Name="BinHash" Text="--" FontSize="11" Foreground="{StaticResource Cyan}" FontFamily="Consolas" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- ===================== FOOTER : CONTROLS ===================== -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorder}" Margin="0,0,0,0" Padding="10,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="BtnInit"   Grid.Column="0" Style="{StaticResource Btn}" Content="INITIALIZE FLEET" Margin="0,0,8,0"/>
+                    <Button x:Name="BtnEngage" Grid.Column="1" Style="{StaticResource Btn}" Content="ENGAGE ▸" Margin="0,0,8,0" BorderBrush="{StaticResource Green}" Foreground="{StaticResource Green}"/>
+                    <Button x:Name="BtnAbort"  Grid.Column="2" Style="{StaticResource Btn}" Content="ABORT ◂" Margin="0,0,0,0" BorderBrush="{StaticResource Red}" Foreground="{StaticResource Red}"/>
+
+                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="14,0,0,0">
+                        <TextBlock x:Name="PhaseLabel" Text="STANDBY" Style="{StaticResource Hdr}" Margin="0,0,0,2"/>
+                        <ProgressBar x:Name="Prog" Height="10" Minimum="0" Maximum="100" Value="0" Foreground="{StaticResource Green}" Background="#0A0F16" BorderBrush="{StaticResource Edge}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="4" Text="可视化模拟 · 不产生真实流量" Foreground="{StaticResource Dim}" FontSize="10" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,28 @@
+# ── build artifacts ─────────────────────────────
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.dll
+*.pdb
+*.exe
+*.exe.manifest
+*.cache
+
+# ── publish output ─────────────────────────────
+publish/
+*.publishproj
+*.pubxml.user
+
+# ── IDE ────────────────────────────────────────
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.swp
+
+# ── local-only artifacts (kept out of git) ─────
+NTPX-RUST.exe
+ntpx_screenshot.png
+视频脚本.txt

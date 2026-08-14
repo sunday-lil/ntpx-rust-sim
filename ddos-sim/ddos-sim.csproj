@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>NTPXSim</RootNamespace>
+    <AssemblyName>NTPX-RUST</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Version>3.7.1.0</Version>
+    <Company>GhostNet Labs</Company>
+    <Product>NTPX//RUST Distributed Stress Simulator</Product>
+    <Copyright>GhostNet Labs // sim build</Copyright>
+    <ApplicationDefaultFont>Consolas</ApplicationDefaultFont>
+  </PropertyGroup>
+
+</Project>
