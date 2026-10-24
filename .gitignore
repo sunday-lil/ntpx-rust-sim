@@ -26,3 +26,8 @@ publish/
 NTPX-RUST.exe
 ntpx_screenshot.png
 视频脚本.txt
+
+# ── generated at runtime ───────────────────────
+ntpx-frame-*.png
+selftest.txt
+shot-*.png
