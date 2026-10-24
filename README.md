@@ -12,6 +12,17 @@
 
 ---
 
+## ⬇️ 下载
+
+不想自己编译的话，直接去 [**Releases**](https://github.com/sunday-lil/ntpx-rust-sim/releases/latest) 下 `NTPX-RUST-v4.0.0-win-x64.exe`：
+
+- 单文件 self-contained，**无需安装 .NET 运行时**，Windows x64 双击即跑
+- 同页附 `.sha256`，可 `Get-FileHash .\NTPX-RUST-v4.0.0-win-x64.exe -Algorithm SHA256` 核对
+- 当前版本校验值：`693a23c69cd812e660516072192e0d909ab7786e668f37c74f196d8b21c1541b`
+
+---
+
+
 ## ✨ 4.0 有什么新的
 
 | | |
