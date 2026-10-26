@@ -24,7 +24,6 @@ publish/
 
 # ── local-only artifacts (kept out of git) ─────
 NTPX-RUST.exe
-ntpx_screenshot.png
 视频脚本.txt
 
 # ── generated at runtime ───────────────────────
