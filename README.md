@@ -1,5 +1,10 @@
 # NTPX//RUST · Distributed Stress Console
 
+![release](https://img.shields.io/github/v/release/sunday-lil/ntpx-rust-sim?label=release&color=22FF88)
+![license](https://img.shields.io/github/license/sunday-lil/ntpx-rust-sim?color=5B6B7E)
+![platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-22D3EE)
+![.NET](https://img.shields.io/badge/.NET-10%20WPF-A779FF)
+
 > **⚠️ 这是一个纯视觉模拟器 (NON-FUNCTIONAL VISUAL MOCK)。**
 > 它**不产生任何真实网络流量**、**不打开任何 socket**、**不做 DNS 解析**、**不发送任何数据包**、**不连接任何目标**。
 > 屏幕上出现的每一个数字、日志、IP、曲线都是本地 `System.Random` **随机生成**的，仅用于演示 / 影视道具 / UI 美学展示。
@@ -19,6 +24,14 @@
 - 单文件 self-contained，**无需安装 .NET 运行时**，Windows x64 双击即跑
 - 同页附 `.sha256`，可 `Get-FileHash .\NTPX-RUST-v4.0.0-win-x64.exe -Algorithm SHA256` 核对
 - 当前版本校验值：`693a23c69cd812e660516072192e0d909ab7786e668f37c74f196d8b21c1541b`
+
+## 🖥 运行环境
+
+| | |
+|---|---|
+| 运行 | Windows 10 / 11 (x64)；单文件 exe 不需要 .NET 运行时 |
+| 构建 | .NET 10 SDK + WPF 工作负载（Windows） |
+| 显示 | 任意 DPI（PerMonitorV2）；窗口按工作区自动收敛，最小 1200×700 |
 
 ---
 
@@ -129,6 +142,25 @@ ddos-sim/
 
 ---
 
+## ❓ FAQ
+
+**会不会真的发包？**
+不会。源码里没有任何 socket / DNS / HTTP 调用，`SimAudit` 每次启动都会扫描自身程序集并在右侧显示 `PASS`；也可以用 `--selftest` 复核（退出码 0 = 15 条断言全过）。
+
+**为什么杀软 / EDR 可能报警？**
+界面和文案伪装成攻击工具，加上单文件 exe 未签名，启发式引擎容易误判。介意的话按上面的步骤自行编译，或者只跑 `--selftest`。
+
+**改了 host / port 真的会连过去吗？**
+不会。那几个文本框只会被拼进日志字符串，不参与任何网络逻辑。
+
+**能关掉启动时那页声明吗？**
+那页是设计的一部分，没有开关；`--snapshot` 批量出图时也保留页脚与 `SIM` 徽标。
+
+**可以加真实的发包能力吗？**
+不在本项目范围内——它只是一块会动的电影道具。
+
+---
+
 ## ⚖️ 说明
 
 本项目**仅用于界面视觉效果演示**。它不包含、也不调用任何真实的发包 / 反射 / 洪泛能力，源码里没有一行网络代码——`SimAudit` 每次启动都会重新验证这一点并显示结果。
@@ -138,3 +170,7 @@ ddos-sim/
 ## License
 
 MIT © 2026 sunday-lil
+
+---
+
+版本变更见 [CHANGELOG.md](CHANGELOG.md)。

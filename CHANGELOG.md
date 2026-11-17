@@ -4,6 +4,15 @@
 
 ---
 
+## 2026-11 · 仓库维护（无代码变更）
+
+- **docs: README** — 增加 shields 徽章（release / license / platform / .NET）、运行环境表、FAQ（是否真发包 / 杀软误报 / host 输入框行为 / 诚实卡开关）、CHANGELOG 入口。
+- **chore: `.gitattributes`** — 统一换行策略（`* text=auto eol=lf`）并标注二进制类型，消除 Windows 上 `core.autocrlf` 反复出现的 CRLF 转换告警。
+- **chore: GitHub 元数据** — 补充仓库 topics（`dotnet` / `simulator` / `cyberpunk`）。
+- **chore: 本地清理** — 移除可重建的 `bin/`、`obj/` 构建产物（约 287 MB）与临时自检输出；源码与发布资产不受影响。
+
+---
+
 ## 2026-10 · v4.0.0 — "honest prop"
 
 - **feat: 启动诚实卡** — 每次启动显示 SIMULATION 声明页（4s 自动进入，点击 / `Esc` 跳过），明示不开 socket、不解析域名、不发包、不启动进程。
