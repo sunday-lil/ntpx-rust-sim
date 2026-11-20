@@ -5,6 +5,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v2
-      - name: msbuild
-        run: msbuild ddos-sim/ddos-sim.csproj /p:Configuration=Release /m /v:minimal
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: restore + build
+        run: dotnet build ddos-sim/ddos-sim.csproj -c Release --nologo
