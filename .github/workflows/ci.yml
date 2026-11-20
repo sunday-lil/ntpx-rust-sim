@@ -1,0 +1,10 @@
+name: ci
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: msbuild
+        run: msbuild ddos-sim/ddos-sim.csproj /p:Configuration=Release /m /v:minimal
