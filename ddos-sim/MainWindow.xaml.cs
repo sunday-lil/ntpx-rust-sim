@@ -28,7 +28,7 @@ namespace NTPXSim
     // ─────────────────────────────────────────────────────────────────────────────
     public partial class MainWindow : Window
     {
-        private const string Version = "4.0.0";
+        private const string Version = "4.0.1";
         private const int GRAPH_POINTS = 120;
 
         private enum Phase { Standby, Arming, Armed, Engaging, Engaged, Aborting, Idle }
@@ -48,6 +48,7 @@ namespace NTPXSim
 
         private double _egressGbps, _reflectedGbps, _pps, _amp, _peak, _scale = 10;
         private double _progress;
+        private bool _engageQueued;
         private TimeSpan _uptime;
 
         private readonly string _snapshotPath;
@@ -181,6 +182,7 @@ namespace NTPXSim
         private void BuildFleet()
         {
             string[] patNames = { "NTP-AMP", "SYNACK", "H2-SET", "H2-PNG" };
+            string[] patShort = { "AMP", "SYN", "H2S", "H2P" };
             Brush[] patCol = { _green, _cyan, _amber, _purple };
 
             for (int i = 0; i < 50; i++)
@@ -210,9 +212,9 @@ namespace NTPXSim
                 var head = new TextBlock
                 {
                     FontFamily = new FontFamily("Consolas"),
-                    FontSize = 9,
+                    FontSize = 8.5,
                     Foreground = _dim,
-                    Text = $"G{i + 1:D2} {patNames[p]}"
+                    Text = $"G{i + 1:D2} {patShort[p]}"
                 };
                 var led = new Ellipse { Width = 6, Height = 6, Fill = _dim, Margin = new Thickness(0, 1, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
                 var val = new TextBlock
@@ -402,8 +404,26 @@ namespace NTPXSim
 
         private void BeginEngage()
         {
-            if (_phase == Phase.Standby || _phase == Phase.Idle) BeginArm();
+            if (_phase == Phase.Engaged || _phase == Phase.Engaging) return;
 
+            // A dead fleet must never report ENGAGED. Arming is a prerequisite: if the
+            // fleet is not fully online, queue the engage and arm first.
+            if (_phase != Phase.Armed || _nodes.Exists(n => !n.Alive))
+            {
+                _engageQueued = true;
+                if (_phase == Phase.Arming)
+                {
+                    LogSys("engage queued · fleet still arming");
+                }
+                else
+                {
+                    LogSys("engage queued · fleet not ready, re-arming first");
+                    BeginArm();
+                }
+                return;
+            }
+
+            _engageQueued = false;
             _phase = Phase.Engaging;
             if (_amp <= 0) _amp = 8.6 + _rng.NextDouble() * 2;
             PhaseLabel.Text = "ENGAGING";
@@ -418,6 +438,7 @@ namespace NTPXSim
         private void BeginAbort()
         {
             if (_phase == Phase.Standby) return;
+            _engageQueued = false;
             _phase = Phase.Aborting;
             PhaseLabel.Text = "ABORTING";
             PhaseLabel.Foreground = _red;
@@ -503,6 +524,12 @@ namespace NTPXSim
                 LogOk($"fleet ready :: 50 groups · 1000 nodes · {SafeThr()}/node threads");
                 LogOk($"target vector: {SafeHost()}:{SafePort()}  duration {SafeDur()}");
                 _progress = 0; Prog.Value = 0;
+
+                if (_engageQueued)
+                {
+                    _engageQueued = false;
+                    BeginEngage();
+                }
             }
         }
 
@@ -678,6 +705,14 @@ namespace NTPXSim
             for (int i = 0; i < 1200 && _phase != Phase.Idle; i++) Tick(null, EventArgs.Empty);
             Check("ABORT -> IDLE", _phase == Phase.Idle);
             Check("egress drained to zero", _egressGbps == 0);
+
+            // regression: ENGAGE pressed on a drained fleet used to report ENGAGED
+            // against a dead matrix (0/1000) because arming was skipped.
+            BeginEngage();
+            for (int i = 0; i < 1200 && _phase != Phase.Engaged; i++) Tick(null, EventArgs.Empty);
+            Check("ENGAGE from IDLE re-arms fleet first", _phase == Phase.Engaged);
+            Check("fleet alive while ENGAGED", _nodes.All(n => n.Alive));
+            Check("alive counter reads 1000/1000 after re-arm", AliveNodes.Text == "1000/1000");
 
             Check("packets emitted == 0", SimAudit.PacketsEmitted == 0);
             Check("sockets opened == 0", SimAudit.SocketsOpened == 0);

@@ -4,6 +4,12 @@
 
 ---
 
+## 2026-11 · v4.0.1 — 相位机修复
+
+- **fix: 空舰队却报 ENGAGED** — `ENGAGE` 不再直接把相位切成 Engaging。舰队未就绪（STANDBY / IDLE / ABORTING / 未完全上线）时先入队并自动执行 `INITIALIZE`，等真正 ARMED 后再开打。此前「ABORT 后直接按 ENGAGE」会出现 `ENGAGED` 配 `0/1000`、全灭舰队仍在跑 80 Gbps 的假象。
+- **fix: 舰队单元标签被裁** — 单元标题由 `G05 NTP-AMP` 改为短码 `G05 AMP` / `SYN` / `H2S` / `H2P`，字号 9 → 8.5，不再被列宽截成 `NTP-AM`。
+- **test: 自检 15 → 18 条** — 新增三条回归断言：ABORT 后 ENGAGE 必须重新武装、ENGAGED 时舰队必须全在线、重新武装后计数必须回到 `1000/1000`。
+
 ## 2026-11 · 仓库维护（无代码变更）
 
 - **docs: README** — 增加 shields 徽章（release / license / platform / .NET）、运行环境表、FAQ（是否真发包 / 杀软误报 / host 输入框行为 / 诚实卡开关）、CHANGELOG 入口。

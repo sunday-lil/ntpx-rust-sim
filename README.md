@@ -19,11 +19,11 @@
 
 ## ⬇️ 下载
 
-不想自己编译的话，直接去 [**Releases**](https://github.com/sunday-lil/ntpx-rust-sim/releases/latest) 下 `NTPX-RUST-v4.0.0-win-x64.exe`：
+不想自己编译的话，直接去 [**Releases**](https://github.com/sunday-lil/ntpx-rust-sim/releases/latest) 下 `NTPX-RUST-v4.0.1-win-x64.exe`：
 
 - 单文件 self-contained，**无需安装 .NET 运行时**，Windows x64 双击即跑
-- 同页附 `.sha256`，可 `Get-FileHash .\NTPX-RUST-v4.0.0-win-x64.exe -Algorithm SHA256` 核对
-- 当前版本校验值：`693a23c69cd812e660516072192e0d909ab7786e668f37c74f196d8b21c1541b`
+- 同页附 `.sha256`，可 `Get-FileHash .\NTPX-RUST-v4.0.1-win-x64.exe -Algorithm SHA256` 核对
+- 当前版本校验值：`cbd96dc7ee1b7f80b869f314185b67dbb291de240f99ea4874ee805aee476408`
 
 ## 🖥 运行环境
 
@@ -49,6 +49,12 @@
 | **重绘图表** | 折线图补上渐变填充（之前是空心的），峰值刻度平滑跟随，不再顶到画布边缘 |
 | **修掉的 bug** | AMP 因子在未开打时显示 `0.0x` → 改为 `—`；重新初始化不清零峰值/进度/曲线；上线计数 500/1000 → 1000/1000；DPI 感知缺失导致窗口超出屏幕 |
 | **DPI** | 加 `PerMonitorV2` 清单，缩放屏上不再被系统位图拉伸、不再跑出屏幕 |
+
+### 4.0.1 修复
+
+- **空舰队却报 `ENGAGED`** — `ENGAGE` 以前不看舰队是否在线：ABORT 之后直接按 `ENGAGE`（或从 IDLE 冷启动），相位会立刻跳到 `ENGAGING`，但负责点亮节点的 `TickArming` 只在 `ARMING` 相位跑，于是节点永远上不来，界面却照样跑 80 Gbps。现在 `ENGAGE` 会先检查舰队，未就绪就入队并自动 `INITIALIZE`，真正 `ARMED` 后才开打。
+- **舰队单元标签被截断** — `G05 NTP-AMP` 放不下 5 列布局，改成短码 `G05 AMP` / `SYN` / `H2S` / `H2P`，字号 9 → 8.5。
+- **自检 15 → 18 条** — 新增「ABORT 后 ENGAGE 必须重新武装」「ENGAGED 时舰队必须全在线」「重新武装后计数回到 1000/1000」三条回归断言。
 
 ---
 
@@ -149,6 +155,9 @@ ddos-sim/
 
 **为什么杀软 / EDR 可能报警？**
 界面和文案伪装成攻击工具，加上单文件 exe 未签名，启发式引擎容易误判。介意的话按上面的步骤自行编译，或者只跑 `--selftest`。
+
+**为什么按 `ENGAGE` 会先自己跑一遍 `INITIALIZE`？**
+因为开打的前提是舰队全在线。舰队没就绪时 `ENGAGE` 只会入队，控制台会打出 `engage queued · fleet not ready, re-arming first`，等 `ARMED` 之后自动开打——这样就不会出现「空舰队 + ENGAGED」的假象。
 
 **改了 host / port 真的会连过去吗？**
 不会。那几个文本框只会被拼进日志字符串，不参与任何网络逻辑。
