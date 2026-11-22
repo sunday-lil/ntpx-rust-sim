@@ -1,6 +1,7 @@
 # NTPX//RUST · Distributed Stress Console
 
 ![release](https://img.shields.io/github/v/release/sunday-lil/ntpx-rust-sim?label=release&color=22FF88)
+![ci](https://github.com/sunday-lil/ntpx-rust-sim/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/github/license/sunday-lil/ntpx-rust-sim?color=5B6B7E)
 ![platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-22D3EE)
 ![.NET](https://img.shields.io/badge/.NET-10%20WPF-A779FF)
@@ -105,7 +106,9 @@ NTPX-RUST.exe --snapshot docs/splash.png --state splash
 NTPX-RUST.exe --selftest selftest.txt
 ```
 
-`--selftest` 会检查 15 条断言，包括「舰队全上线」「上线计数 1000/1000」「egress > 40 Gbps」「abort 后流量归零」以及「packets / sockets / processes 恒为 0」。
+`--selftest` 会检查 18 条断言，包括「舰队全上线」「上线计数 1000/1000」「egress > 40 Gbps」「abort 后流量归零」「abort 后 ENGAGE 必须重新武装」以及「packets / sockets / processes 恒为 0」。
+
+CI（[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）在 windows-latest 上跑 `dotnet build -c Release` + 这套 `--selftest`，报告作为 artifact 上传。
 
 ---
 
