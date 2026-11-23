@@ -25,10 +25,38 @@ jobs:
           Get-Content selftest.txt
           if ($p.ExitCode -ne 0) { exit $p.ExitCode }
 
+      - name: cli smoke + deterministic snapshot
+        shell: pwsh
+        run: |
+          $exe = "ddos-sim/bin/Release/net10.0-windows/NTPX-RUST.exe"
+
+          $v = Start-Process -FilePath $exe -ArgumentList '--version' -Wait -PassThru `
+               -NoNewWindow -RedirectStandardOutput version.txt
+          Get-Content version.txt
+          if ($v.ExitCode -ne 0) { throw "version smoke failed ($($v.ExitCode))" }
+
+          New-Item -ItemType Directory -Force _ci | Out-Null
+          $a = Start-Process -FilePath $exe -ArgumentList '--snapshot', '_ci/a.png', '--state', 'engaged' -Wait -PassThru
+          $b = Start-Process -FilePath $exe -ArgumentList '--snapshot', '_ci/b.png', '--state', 'engaged' -Wait -PassThru
+          if ($a.ExitCode -ne 0 -or $b.ExitCode -ne 0) { throw "snapshot failed" }
+
+          $h1 = (Get-FileHash _ci/a.png -Algorithm SHA256).Hash
+          $h2 = (Get-FileHash _ci/b.png -Algorithm SHA256).Hash
+          if ($h1 -ne $h2) { throw "snapshot is not deterministic: $h1 vs $h2" }
+          Write-Host "snapshot deterministic: $h1"
+
       - name: upload self-test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: selftest
           path: selftest.txt
+          if-no-files-found: ignore
+
+      - name: upload rendered frame
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frame
+          path: _ci/a.png
           if-no-files-found: ignore

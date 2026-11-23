@@ -9,7 +9,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <Version>4.0.1.0</Version>
+    <Version>4.0.2.0</Version>
     <Company>GhostNet Labs</Company>
     <Product>NTPX//RUST Distributed Stress Simulator</Product>
     <Copyright>GhostNet Labs // sim build</Copyright>

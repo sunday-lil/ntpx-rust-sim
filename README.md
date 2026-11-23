@@ -20,11 +20,11 @@
 
 ## ⬇️ 下载
 
-不想自己编译的话，直接去 [**Releases**](https://github.com/sunday-lil/ntpx-rust-sim/releases/latest) 下 `NTPX-RUST-v4.0.1-win-x64.exe`：
+不想自己编译的话，直接去 [**Releases**](https://github.com/sunday-lil/ntpx-rust-sim/releases/latest) 下 `NTPX-RUST-v4.0.2-win-x64.exe`：
 
 - 单文件 self-contained，**无需安装 .NET 运行时**，Windows x64 双击即跑
-- 同页附 `.sha256`，可 `Get-FileHash .\NTPX-RUST-v4.0.1-win-x64.exe -Algorithm SHA256` 核对
-- 当前版本校验值：`cbd96dc7ee1b7f80b869f314185b67dbb291de240f99ea4874ee805aee476408`
+- 同页附 `.sha256`，可 `Get-FileHash .\NTPX-RUST-v4.0.2-win-x64.exe -Algorithm SHA256` 核对
+- 当前版本校验值：`19f9b9de3186fe757ab49f1d95c616aad1104d2680d13a553b53e950d4fcb6ee`
 
 ## 🖥 运行环境
 
@@ -32,7 +32,7 @@
 |---|---|
 | 运行 | Windows 10 / 11 (x64)；单文件 exe 不需要 .NET 运行时 |
 | 构建 | .NET 10 SDK + WPF 工作负载（Windows） |
-| 显示 | 任意 DPI（PerMonitorV2）；窗口按工作区自动收敛，最小 1200×700 |
+| 显示 | 任意 DPI（PerMonitorV2）；窗口按工作区自动收敛，最小 1120×680 |
 
 ---
 
@@ -56,6 +56,17 @@
 - **空舰队却报 `ENGAGED`** — `ENGAGE` 以前不看舰队是否在线：ABORT 之后直接按 `ENGAGE`（或从 IDLE 冷启动），相位会立刻跳到 `ENGAGING`，但负责点亮节点的 `TickArming` 只在 `ARMING` 相位跑，于是节点永远上不来，界面却照样跑 80 Gbps。现在 `ENGAGE` 会先检查舰队，未就绪就入队并自动 `INITIALIZE`，真正 `ARMED` 后才开打。
 - **舰队单元标签被截断** — `G05 NTP-AMP` 放不下 5 列布局，改成短码 `G05 AMP` / `SYN` / `H2S` / `H2P`，字号 9 → 8.5。
 - **自检 15 → 18 条** — 新增「ABORT 后 ENGAGE 必须重新武装」「ENGAGED 时舰队必须全在线」「重新武装后计数回到 1000/1000」三条回归断言。
+
+### 4.0.2 修复
+
+- **IDLE 不再留尾巴** — 排空结束后统一收口：所有节点下线、PPS 归零、`FRAG EVASION` / `HOPS` / `ROUTE` 复位，不会出现「IDLE 但还有灯亮着」。
+- **ARMED 进度条保持满格** — 之前编队完成瞬间归零，现在是 ENGAGE 时才清零重新计。
+- **INITIALIZE 能取消排队中的 ENGAGE** — 先按 ENGAGE 再按 INITIALIZE 不会又自己开打；ENGAGED 下误按按钮也会在控制台留一行 `… ignored`，不再装死。
+- **快照可复现** — `--snapshot` 以前每次出图都不一样（定时器还在跑、日志时间戳用 `DateTime.Now`、`SIM` 呼吸灯动画没停）。现在冻结 tick + 固定日志时钟 + 停动画，连续渲染 sha256 完全一致，CI 里有回归。
+- **CLI 变严格** — `--snapshot` 缺值、未知 `--state`、未知选项、`--snapshot` 与 `--selftest` 混用，都打印用法并以 2 退出；新增 `--version` / `--help`；快照失败以 1 退出。
+- **窄窗口** — 头部右侧压成单行，最小尺寸降到 1120×680（1366 宽屏 + 125% 缩放也能放下）。
+- **杂项** — 日志按整行回收、F12 文件名精确到毫秒、窗口过小给出明确错误、关闭时停掉 splash 定时器、复用舰队画刷/字体、删掉死代码。
+- **自检 18 → 28 条**。
 
 ---
 
@@ -96,6 +107,7 @@
 
 ```powershell
 # 离屏渲染一张 engaged 状态的截图（1480×820，1:1 像素，与 DPI 无关）
+# 同一条命令重复执行，得到字节完全一致的 PNG
 NTPX-RUST.exe --snapshot preview.png --state engaged
 
 # 可选状态：engaged | armed | idle | splash
@@ -104,9 +116,15 @@ NTPX-RUST.exe --snapshot docs/splash.png --state splash
 # 跑一遍完整相位机：ARM → ARMED → ENGAGE → ENGAGED → ABORT → IDLE
 # 报告写到文件，退出码 0 = 全过，1 = 有失败
 NTPX-RUST.exe --selftest selftest.txt
+
+# 其它
+NTPX-RUST.exe --version
+NTPX-RUST.exe --help
 ```
 
-`--selftest` 会检查 18 条断言，包括「舰队全上线」「上线计数 1000/1000」「egress > 40 Gbps」「abort 后流量归零」「abort 后 ENGAGE 必须重新武装」以及「packets / sockets / processes 恒为 0」。
+退出码：`0` 成功 · `1` 自检失败或快照渲染失败 · `2` 参数错误（含未知 `--state`、缺值、`--snapshot` 与 `--selftest` 混用）。
+
+`--selftest` 会检查 28 条断言，包括「舰队全上线」「上线计数 1000/1000」「egress > 40 Gbps」「abort 后流量归零」「abort 后 ENGAGE 必须重新武装」以及「packets / sockets / processes 恒为 0」。
 
 CI（[`.github/workflows/ci.yml`](.github/workflows/ci.yml)）在 windows-latest 上跑 `dotnet build -c Release` + 这套 `--selftest`，报告作为 artifact 上传。
 

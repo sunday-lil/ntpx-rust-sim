@@ -1,9 +1,9 @@
 <Window x:Class="NTPXSim.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="NTPX//RUST  ·  Distributed Stress Console v4.0.1  [SIM BUILD]"
+        Title="NTPX//RUST  ·  Distributed Stress Console v4.0.2  [SIM BUILD]"
         Height="820" Width="1480"
-        MinHeight="700" MinWidth="1200"
+        MinHeight="680" MinWidth="1120"
         WindowStartupLocation="CenterScreen"
         Background="#05070A"
         Foreground="#C9D6E3"
@@ -15,9 +15,7 @@
         WindowStyle="SingleBorderWindow">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="BG"     Color="#05070A"/>
         <SolidColorBrush x:Key="Panel"  Color="#0B0F16"/>
-        <SolidColorBrush x:Key="Panel2" Color="#0E141D"/>
         <SolidColorBrush x:Key="Edge"   Color="#1B2330"/>
         <SolidColorBrush x:Key="Dim"    Color="#5B6B7E"/>
         <SolidColorBrush x:Key="Txt"    Color="#C9D6E3"/>
@@ -254,19 +252,13 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                                <TextBlock Text="SIM BUILD · NOTHING LEAVES THIS MACHINE"
-                                           Foreground="#3F4C5C" FontSize="8.5" HorizontalAlignment="Right"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <TextBlock Foreground="{StaticResource Dim}" FontSize="9" Text="TX "/>
-                                    <TextBlock x:Name="TxCount" Foreground="{StaticResource Dim}" FontSize="9" Text="0 B"/>
-                                    <TextBlock Foreground="#33404F" FontSize="9" Text="  ·  SOCKETS "/>
-                                    <TextBlock x:Name="SockCount" Foreground="{StaticResource Dim}" FontSize="9" Text="0"/>
-                                    <TextBlock Foreground="#33404F" FontSize="9" Text="  ·  PROC "/>
-                                    <TextBlock x:Name="ProcCount" Foreground="{StaticResource Dim}" FontSize="9" Text="0"/>
-                                </StackPanel>
-                            </StackPanel>
-                            <TextBlock Foreground="{StaticResource Dim}" FontSize="10" Text="UPTIME " VerticalAlignment="Center"/>
+                            <TextBlock Foreground="#3F4C5C" FontSize="9" Text="TX " VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxCount" Foreground="{StaticResource Dim}" FontSize="9" Text="0 B" VerticalAlignment="Center"/>
+                            <TextBlock Foreground="#33404F" FontSize="9" Text="  ·  SOCKS " VerticalAlignment="Center"/>
+                            <TextBlock x:Name="SockCount" Foreground="{StaticResource Dim}" FontSize="9" Text="0" VerticalAlignment="Center"/>
+                            <TextBlock Foreground="#33404F" FontSize="9" Text="  ·  PROC " VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ProcCount" Foreground="{StaticResource Dim}" FontSize="9" Text="0" VerticalAlignment="Center"/>
+                            <TextBlock Foreground="{StaticResource Dim}" FontSize="10" Text="   UPTIME " VerticalAlignment="Center"/>
                             <TextBlock x:Name="Uptime" Foreground="{StaticResource Txt}" FontSize="10" Text="00:00:00" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <Border BorderBrush="#5A2A38" BorderThickness="1" CornerRadius="3" Padding="6,3" Background="#160A10">
                                 <StackPanel Orientation="Horizontal">
@@ -555,7 +547,7 @@
                             <TextBlock Text="■" Foreground="{StaticResource Red}" FontSize="30" Margin="0,0,12,0" VerticalAlignment="Center"/>
                             <TextBlock Text="NTPX//RUST" Foreground="{StaticResource Green}" FontSize="30" FontWeight="Black" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock Text="DISTRIBUTED STRESS CONSOLE  ·  SIMULATION BUILD 4.0.1"
+                        <TextBlock Text="DISTRIBUTED STRESS CONSOLE  ·  SIMULATION BUILD 4.0.2"
                                    Foreground="{StaticResource Dim}" FontSize="11" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                         <Border Height="1" Background="#16202C" Margin="0,22,0,20"/>
 

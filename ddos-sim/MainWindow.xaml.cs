@@ -28,7 +28,7 @@ namespace NTPXSim
     // ─────────────────────────────────────────────────────────────────────────────
     public partial class MainWindow : Window
     {
-        private const string Version = "4.0.1";
+        internal const string BuildVersion = "4.0.2";
         private const int GRAPH_POINTS = 120;
 
         private enum Phase { Standby, Arming, Armed, Engaging, Engaged, Aborting, Idle }
@@ -45,6 +45,8 @@ namespace NTPXSim
         private readonly SolidColorBrush _ledOff = new SolidColorBrush(Color.FromRgb(0x26, 0x33, 0x3F));
         private readonly Dictionary<Phase, TextBlock> _phaseRows = new Dictionary<Phase, TextBlock>();
         private readonly Dictionary<Phase, Ellipse> _phaseLeds = new Dictionary<Phase, Ellipse>();
+        private readonly FontFamily _mono = new FontFamily("Consolas");
+        private readonly Brush _cellEdge = new SolidColorBrush(Color.FromRgb(0x16, 0x1D, 0x28));
 
         private double _egressGbps, _reflectedGbps, _pps, _amp, _peak, _scale = 10;
         private double _progress;
@@ -54,6 +56,8 @@ namespace NTPXSim
         private readonly string _snapshotPath;
         private readonly string _snapshotState;
         private readonly string _selfTestPath;
+        private readonly DateTime _logClockBase;
+        private int _logClockSeq;
         private DispatcherTimer _splashTimer;
 
         public MainWindow() : this(null, "engaged", null) { }
@@ -63,6 +67,11 @@ namespace NTPXSim
             _snapshotPath = string.IsNullOrWhiteSpace(snapshotPath) ? null : snapshotPath;
             _snapshotState = (snapshotState ?? "engaged").Trim().ToLowerInvariant();
             _selfTestPath = string.IsNullOrWhiteSpace(selfTestPath) ? null : selfTestPath;
+
+            // Snapshot runs pin the log clock so repeated renders are byte-identical.
+            _logClockBase = _snapshotPath != null
+                ? new DateTime(2026, 11, 23, 9, 41, 7)
+                : DateTime.Now;
 
             InitializeComponent();
 
@@ -84,7 +93,6 @@ namespace NTPXSim
 
             _tick.Interval = TimeSpan.FromMilliseconds(70);
             _tick.Tick += Tick;
-            _tick.Start();
 
             BtnInit.Click   += (s, e) => BeginArm();
             BtnEngage.Click += (s, e) => BeginEngage();
@@ -92,7 +100,11 @@ namespace NTPXSim
             BtnEnter.Click  += (s, e) => DismissSplash();
             PreviewKeyDown  += OnPreviewKeyDown;
 
-            Closing += (s, e) => _tick.Stop();
+            Closing += (s, e) =>
+            {
+                _tick.Stop();
+                _splashTimer?.Stop();
+            };
 
             if (_selfTestPath != null)
             {
@@ -110,7 +122,11 @@ namespace NTPXSim
             else
             {
                 FitToWorkArea();
-                Loaded += (s, e) => ShowSplash();
+                Loaded += (s, e) =>
+                {
+                    ShowSplash();
+                    _tick.Start();
+                };
             }
         }
 
@@ -168,6 +184,13 @@ namespace NTPXSim
         // ── KEYBOARD ──────────────────────────────────────────────────────────────
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (SplashLayer.Visibility == Visibility.Visible && e.Key != Key.F12)
+            {
+                DismissSplash();
+                e.Handled = true;
+                return;
+            }
+
             switch (e.Key)
             {
                 case Key.F5: BeginArm(); e.Handled = true; break;
@@ -181,7 +204,6 @@ namespace NTPXSim
         // ── FLEET MATRIX ──────────────────────────────────────────────────────────
         private void BuildFleet()
         {
-            string[] patNames = { "NTP-AMP", "SYNACK", "H2-SET", "H2-PNG" };
             string[] patShort = { "AMP", "SYN", "H2S", "H2P" };
             Brush[] patCol = { _green, _cyan, _amber, _purple };
 
@@ -191,8 +213,6 @@ namespace NTPXSim
                 var node = new FleetNode
                 {
                     Index = i,
-                    Pattern = p,
-                    PatternName = patNames[p],
                     PatternBrush = patCol[p],
                     Alive = false,
                     Pps = 0
@@ -204,14 +224,14 @@ namespace NTPXSim
                     Margin = new Thickness(2),
                     Padding = new Thickness(3, 2, 3, 2),
                     Background = _cellOff,
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(0x16, 0x1D, 0x28)),
+                    BorderBrush = _cellEdge,
                     BorderThickness = new Thickness(1),
                     CornerRadius = new CornerRadius(2)
                 };
                 var sp = new StackPanel();
                 var head = new TextBlock
                 {
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = _mono,
                     FontSize = 8.5,
                     Foreground = _dim,
                     Text = $"G{i + 1:D2} {patShort[p]}"
@@ -219,7 +239,7 @@ namespace NTPXSim
                 var led = new Ellipse { Width = 6, Height = 6, Fill = _dim, Margin = new Thickness(0, 1, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
                 var val = new TextBlock
                 {
-                    FontFamily = new FontFamily("Consolas"),
+                    FontFamily = _mono,
                     FontSize = 9,
                     Foreground = patCol[p],
                     Text = "0"
@@ -344,20 +364,31 @@ namespace NTPXSim
 
         private void LogColored(string text, Brush color)
         {
-            LogBlock.Inlines.Add(new Run($"[{DateTime.Now:HH:mm:ss.fff}] ") { Foreground = _dim });
+            LogBlock.Inlines.Add(new Run($"[{NextLogStamp():HH:mm:ss.fff}] ") { Foreground = _dim });
             LogBlock.Inlines.Add(new Run(text) { Foreground = color });
             LogBlock.Inlines.Add(new LineBreak());
 
-            // Keep roughly the last 240 lines: 3 inlines per line.
+            // Keep roughly the last 240 lines, dropping whole lines (3 inlines each)
+            // so a timestamp never survives without its message.
             while (LogBlock.Inlines.Count > 240 * 3)
-                LogBlock.Inlines.Remove(LogBlock.Inlines.FirstInline);
+            {
+                for (int i = 0; i < 3 && LogBlock.Inlines.FirstInline != null; i++)
+                    LogBlock.Inlines.Remove(LogBlock.Inlines.FirstInline);
+            }
 
             LogScroll.ScrollToEnd();
         }
 
+        private DateTime NextLogStamp()
+        {
+            if (_snapshotPath == null) return DateTime.Now;
+            _logClockSeq++;
+            return _logClockBase.AddMilliseconds(77 * _logClockSeq);
+        }
+
         private void BootLog()
         {
-            LogOk($"NTPX//RUST console v{Version} (sim build) — no real traffic generated.");
+            LogOk($"NTPX//RUST console v{BuildVersion} (sim build) — no real traffic generated.");
             LogSys("loading runtime config · wg0 tunnel · kali dispatch shell");
             LogSys("patterns registered: A=NTP MONLIST AMP · B=SYN+ACK REFLECT · C=H2 SETTINGS · D=H2 PING+DATA(0)");
             LogSys("fleet matrix empty — press INITIALIZE FLEET to bring nodes online.");
@@ -382,17 +413,28 @@ namespace NTPXSim
         }
 
         // ── PHASE TRANSITIONS ─────────────────────────────────────────────────────
-        private void BeginArm()
+        private void BeginArm(bool preserveEngageQueue = false)
         {
-            if (_phase == Phase.Engaged || _phase == Phase.Engaging) return;
+            if (_phase == Phase.Engaged || _phase == Phase.Engaging)
+            {
+                LogSys("initialize ignored · console is live, ABORT first");
+                return;
+            }
+
+            if (!preserveEngageQueue) _engageQueued = false;
 
             _phase = Phase.Arming;
             _uptime = TimeSpan.Zero;
             _peak = 0;
             _scale = 10;
             _progress = 0;
+            _amp = 0;
             Prog.Value = 0;
             for (int i = 0; i < _graph.Count; i++) _graph[i] = 0;
+
+            sFrag.Text = "off";
+            sHops.Text = "--";
+            Route.Text = "—";
 
             PhaseLabel.Text = "ARMING FLEET";
             PhaseLabel.Foreground = _amber;
@@ -404,7 +446,11 @@ namespace NTPXSim
 
         private void BeginEngage()
         {
-            if (_phase == Phase.Engaged || _phase == Phase.Engaging) return;
+            if (_phase == Phase.Engaged || _phase == Phase.Engaging)
+            {
+                LogSys("engage ignored · already engaged");
+                return;
+            }
 
             // A dead fleet must never report ENGAGED. Arming is a prerequisite: if the
             // fleet is not fully online, queue the engage and arm first.
@@ -418,13 +464,15 @@ namespace NTPXSim
                 else
                 {
                     LogSys("engage queued · fleet not ready, re-arming first");
-                    BeginArm();
+                    BeginArm(true);
                 }
                 return;
             }
 
             _engageQueued = false;
             _phase = Phase.Engaging;
+            _progress = 0;
+            Prog.Value = 0;
             if (_amp <= 0) _amp = 8.6 + _rng.NextDouble() * 2;
             PhaseLabel.Text = "ENGAGING";
             PhaseLabel.Foreground = _green;
@@ -437,7 +485,11 @@ namespace NTPXSim
 
         private void BeginAbort()
         {
-            if (_phase == Phase.Standby) return;
+            if (_phase == Phase.Standby || _phase == Phase.Idle)
+            {
+                LogSys("abort ignored · nothing is running");
+                return;
+            }
             _engageQueued = false;
             _phase = Phase.Aborting;
             PhaseLabel.Text = "ABORTING";
@@ -475,12 +527,7 @@ namespace NTPXSim
             {
                 _egressGbps *= 0.90; _reflectedGbps *= 0.90; _pps *= 0.90;
                 if (_egressGbps < 0.05)
-                {
-                    _egressGbps = 0; _reflectedGbps = 0; _pps = 0; _amp = 0;
-                    _phase = Phase.Idle;
-                    PhaseLabel.Text = "IDLE"; PhaseLabel.Foreground = _dim;
-                    LogOk("fleet drained · idle.");
-                }
+                    EnterIdle("fleet drained · idle.");
             }
             else
             {
@@ -491,6 +538,23 @@ namespace NTPXSim
             UpdateGraph();
             UpdateFleet();
             UpdatePhaseTrack();
+        }
+
+        /// <summary>Single canonical transition into IDLE: nothing may stay lit.</summary>
+        private void EnterIdle(string logLine)
+        {
+            _phase = Phase.Idle;
+            _egressGbps = 0; _reflectedGbps = 0; _pps = 0; _amp = 0;
+            _progress = 0;
+            Prog.Value = 0;
+            foreach (var n in _nodes) { n.Alive = false; n.Pps = 0; }
+
+            sFrag.Text = "off";
+            sHops.Text = "--";
+            Route.Text = "—";
+            PhaseLabel.Text = "IDLE";
+            PhaseLabel.Foreground = _dim;
+            LogOk(logLine);
         }
 
         private void TickIdle()
@@ -523,7 +587,7 @@ namespace NTPXSim
                 PhaseLabel.Foreground = _green;
                 LogOk($"fleet ready :: 50 groups · 1000 nodes · {SafeThr()}/node threads");
                 LogOk($"target vector: {SafeHost()}:{SafePort()}  duration {SafeDur()}");
-                _progress = 0; Prog.Value = 0;
+                _progress = 100; Prog.Value = 100;
 
                 if (_engageQueued)
                 {
@@ -612,6 +676,15 @@ namespace NTPXSim
             PpsLabel.Text   = $"{(long)_pps:N0} pps";
         }
 
+        /// <summary>Repaint every derived widget once (used by the frozen snapshot path).</summary>
+        private void RefreshUi()
+        {
+            UpdateStats();
+            RedrawGraph();
+            UpdateFleet();
+            UpdatePhaseTrack();
+        }
+
         private void UpdateGraph()
         {
             _graph.RemoveAt(0);
@@ -635,7 +708,7 @@ namespace NTPXSim
         // ── FRAME CAPTURE ─────────────────────────────────────────────────────────
         private void ExportFrame()
         {
-            string name = $"ntpx-frame-{DateTime.Now:yyyyMMdd-HHmmss}.png";
+            string name = $"ntpx-frame-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png";
             string path = System.IO.Path.Combine(Directory.GetCurrentDirectory(), name);
             try
             {
@@ -657,6 +730,8 @@ namespace NTPXSim
             // frame is identical on every DPI setting (docs / CI screenshots).
             int w = Math.Max(1, (int)Math.Round(root.ActualWidth));
             int h = Math.Max(1, (int)Math.Round(root.ActualHeight));
+            if (w < 200 || h < 200)
+                throw new InvalidOperationException($"window too small to capture ({w}x{h})");
 
             var rtb = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
             rtb.Render(root);
@@ -684,35 +759,64 @@ namespace NTPXSim
                 sb.AppendLine($"{(cond ? "PASS" : "FAIL")}  {name}");
             }
 
+            _tick.Stop();   // drive the loop by hand so the run is deterministic
+
             Check("static audit clean (no network surface)", SimAudit.Clean);
             Check("starts in STANDBY", _phase == Phase.Standby);
             Check("fleet starts offline", _nodes.All(n => !n.Alive));
 
+            // ── arm ───────────────────────────────────────────────────────────
             BeginArm();
             for (int i = 0; i < 800 && _phase != Phase.Armed; i++) Tick(null, EventArgs.Empty);
             Check("INITIALIZE -> ARMED", _phase == Phase.Armed);
             Check("fleet fully online", _nodes.All(n => n.Alive));
             Check("alive counter reads 1000/1000", AliveNodes.Text == "1000/1000");
+            Check("progress stays full while ARMED", Math.Abs(Prog.Value - 100) < 0.001);
 
+            // ── engage ────────────────────────────────────────────────────────
             BeginEngage();
             for (int i = 0; i < 400 && _phase != Phase.Engaged; i++) Tick(null, EventArgs.Empty);
             Check("ENGAGE -> ENGAGED", _phase == Phase.Engaged);
             Check($"egress above 40 Gbps (actual {_egressGbps:0.0})", _egressGbps > 40);
-            Check("progress bar at 100", Math.Abs(Prog.Value - 100) < 0.001);
             Check("amp factor in plausible band", _amp > 8 && _amp < 11);
+            Check("progress bar at 100 once ENGAGED", Math.Abs(Prog.Value - 100) < 0.001);
 
+            Phase live = _phase;
+            BeginEngage();
+            Check("ENGAGE while ENGAGED is a no-op", _phase == live);
+            BeginArm();
+            Check("INITIALIZE while ENGAGED is a no-op", _phase == live);
+
+            // ── abort from ENGAGED ────────────────────────────────────────────
             BeginAbort();
             for (int i = 0; i < 1200 && _phase != Phase.Idle; i++) Tick(null, EventArgs.Empty);
             Check("ABORT -> IDLE", _phase == Phase.Idle);
             Check("egress drained to zero", _egressGbps == 0);
+            Check("every node offline in IDLE", _nodes.All(n => !n.Alive));
+            Check("frag evasion reset in IDLE", sFrag.Text == "off");
+            Check("hop count reset in IDLE", sHops.Text == "--");
+            BeginAbort();
+            Check("ABORT in IDLE is a no-op", _phase == Phase.Idle);
 
-            // regression: ENGAGE pressed on a drained fleet used to report ENGAGED
-            // against a dead matrix (0/1000) because arming was skipped.
+            // ── ENGAGE from IDLE must arm first, not fake an engagement ──────
             BeginEngage();
-            for (int i = 0; i < 1200 && _phase != Phase.Engaged; i++) Tick(null, EventArgs.Empty);
-            Check("ENGAGE from IDLE re-arms fleet first", _phase == Phase.Engaged);
+            Check("ENGAGE from IDLE queues instead of engaging", _phase == Phase.Arming && _engageQueued);
+            for (int i = 0; i < 400 && _phase != Phase.Engaged; i++) Tick(null, EventArgs.Empty);
+            Check("queued ENGAGE fires once ARMED", _phase == Phase.Engaged);
             Check("fleet alive while ENGAGED", _nodes.All(n => n.Alive));
             Check("alive counter reads 1000/1000 after re-arm", AliveNodes.Text == "1000/1000");
+
+            // ── an explicit INITIALIZE wins over a queued ENGAGE ─────────────
+            BeginAbort();
+            for (int i = 0; i < 1200 && _phase != Phase.Idle; i++) Tick(null, EventArgs.Empty);
+            BeginEngage();                        // queue + arm
+            BeginArm();                           // explicit INITIALIZE cancels it
+            for (int i = 0; i < 400 && _phase != Phase.Armed; i++) Tick(null, EventArgs.Empty);
+            Check("INITIALIZE cancels a queued ENGAGE", _phase == Phase.Armed && !_engageQueued);
+
+            // ── log ring buffer stays bounded ─────────────────────────────────
+            for (int i = 0; i < 400; i++) LogSys("selftest filler line " + i);
+            Check("log buffer capped at 240 lines", LogBlock.Inlines.Count <= 240 * 3);
 
             Check("packets emitted == 0", SimAudit.PacketsEmitted == 0);
             Check("sockets opened == 0", SimAudit.SocketsOpened == 0);
@@ -733,14 +837,26 @@ namespace NTPXSim
 
         private void OnSnapshotLoaded(object sender, RoutedEventArgs e)
         {
+            _tick.Stop();          // frozen frame -> identical PNG bytes every run
+            SimDot.BeginAnimation(OpacityProperty, null);   // stop the SIM pulse
+            SimDot.Opacity = 1.0;
             PrepareSnapshotState();
+            RefreshUi();
             var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
             timer.Tick += (s, args) =>
             {
                 timer.Stop();
-                try { CaptureTo(_snapshotPath); }
-                catch (Exception ex) { Console.Error.WriteLine("snapshot failed: " + ex); }
-                finally { Application.Current.Shutdown(); }
+                int code = 0;
+                try
+                {
+                    CaptureTo(_snapshotPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine("ntpx: snapshot failed: " + ex.Message);
+                    code = 1;
+                }
+                Application.Current.Shutdown(code);
             };
             timer.Start();
         }
@@ -757,7 +873,12 @@ namespace NTPXSim
 
             if (_snapshotState == "idle")
             {
-                PhaseLabel.Text = "STANDBY";
+                _phase = Phase.Idle;
+                PhaseLabel.Text = "IDLE";
+                PhaseLabel.Foreground = _dim;
+                sFrag.Text = "off";
+                sHops.Text = "--";
+                Route.Text = "—";
                 return;
             }
 
@@ -773,7 +894,8 @@ namespace NTPXSim
                 _phase = Phase.Armed;
                 PhaseLabel.Text = "ARMED · STANDBY";
                 PhaseLabel.Foreground = _green;
-                Prog.Value = 0;
+                _progress = 100;
+                Prog.Value = 100;
                 return;
             }
 
@@ -857,8 +979,6 @@ namespace NTPXSim
     internal class FleetNode
     {
         public int Index;
-        public int Pattern;
-        public string PatternName;
         public Brush PatternBrush;
         public bool Alive;
         public double Pps;
